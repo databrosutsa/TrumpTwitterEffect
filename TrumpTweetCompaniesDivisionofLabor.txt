@@ -1,0 +1,23 @@
+Ray:
+
+Amazon
+Facebook
+Apple
+Macys
+Boeing
+CBS
+Facebook
+Ford
+General Motors
+Twitter
+
+Manuel:
+Google
+Lockheed
+Merck
+NBC
+NewYorkTimes
+Nordstrom
+Pfizer
+T-mobile
+Toyota

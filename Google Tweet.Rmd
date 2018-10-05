@@ -1,0 +1,113 @@
+---
+title: "Syuzhet Score for Google"
+author: "Manuel Perez"
+date: "October 4, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+### Google Tweet on August 28,2018
+TWGoogle <- "Google search results for “Trump News” shows only the viewing/reporting of Fake News Media. In other words they have it RIGGED for me &amp; others so that almost all stories &amp; news is BAD. Fake CNN is prominent. Republican/Conservative &amp; Fair Media is shut out. Illegal? 96% of results on “Trump News” are from National Left-Wing Media very dangerous. Google &amp; others are suppressing voices of Conservatives and hiding information and news that is good. They are controlling what we can &amp; cannot see. This is a very serious situation-will be addressed!"
+```
+
+```{r}
+### Breaks up into sentences
+TWGoogle_sent <- get_sentences(TWGoogle)
+```
+
+```{r}
+### General attributes of Google senetences
+class(TWGoogle_sent)
+str(TWGoogle_sent)
+head(TWGoogle_sent)
+```
+
+
+```{r}
+###If want Google tweet as tokens (words)
+TWGoogle_word <- get_tokens(TWGoogle, pattern = "\\W")
+```
+
+```{r}
+### Head of Google tweet as words
+head(TWGoogle_word)
+```
+
+```{r}
+### Sentiment of Google tweet as sentences
+TWGoogle_Ment <- get_sentiment(TWGoogle_sent, method="syuzhet")
+```
+
+```{r}
+### Sentiment of Google tweet as words
+TWGoogle_Mentw <- get_sentiment(TWGoogle_word, method="syuzhet")
+```
+
+```{r}
+### Sentiment analysis of Google tweet as sentences
+TWGoogle_Ment
+```
+
+```{r}
+### Sentiment analysis of Google tweet as words
+TWGoogle_Mentw
+```
+
+
+```{r}
+### Summation of Sentiment analysis of Google tweet as sentences
+sum(TWGoogle_Ment)
+```
+
+```{r}
+### Summation of Sentiment analysis of Google tweet as word
+sum(TWGoogle_Mentw)
+```
+
+```{r}
+### Summary of sentiment analysis of Google tweet as sentences
+summary(TWGoogle_Ment)
+```
+
+```{r}
+### Summary of sentiment analysis of Google tweet as words
+summary(TWGoogle_Mentw)
+```
+
+```{r}
+plot(
+  TWGoogle_Ment, 
+  type="l", 
+  main="Example Plot Trajectory", 
+  xlab = "Narrative Time", 
+  ylab= "Emotional Valence"
+)
+```
+
+```{r}
+plot(
+  TWGoogle_Mentw, 
+  type="l", 
+  main="Example Plot Trajectory", 
+  xlab = "Narrative Time", 
+  ylab= "Emotional Valence"
+)
+```
+
+```{r}
+### Incomplete graph trying to put moving average line on graph 
+plot(
+  TWGoogle_Mentw, 
+  type="l", 
+  main="Example Plot Trajectory", 
+  xlab = "Narrative Time", 
+  ylab= "Emotional Valence"
+) 
+```
+

@@ -1,0 +1,132 @@
+---
+title: "Macy Tweet"
+author: "Manuel Perez"
+date: "October 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(syuzhet)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(readr)
+```
+
+```{r}
+### Macy Tweet on January 7,2016
+Macy_1_7_16 <- "@Macys was one of the worst performing stocks on the S&P last year, plunging 46%. Very disloyal company. Another win for Trump! Boycott."
+```
+
+```{r}
+### Macy Tweet on December 4,2015
+Macy_12_4_15 <- "Good news, disloyal @Macys stock is in a total free fall. Don't shop there for Christmas!"
+```
+
+```{r}
+### Macy Tweet on November 23,2015
+Macy_11_23_15 <- "When you do your Christmas shopping remember how disloyal @Macys was to the subject of illegal immigration. #BoycottMacys #DumpMacys"
+```
+
+```{r}
+### Macy Tweet on November 16,2015
+Macy_11_16_15 <- "Wow, @Macys shares are down more than 40% this year. I never knew my ties & shirts not being sold there would have such a big impact!"
+```
+
+```{r}
+### Breaks up into sentences
+Macy_1_7_16_sentences <- get_sentences(Macy_1_7_16)
+Macy_12_4_15_sentences <- get_sentences(Macy_12_4_15)
+Macy_11_23_15_sentences <- get_sentences(Macy_11_23_15)
+Macy_11_16_15_sentences <- get_sentences(Macy_11_16_15)
+```
+
+```{r}
+###If want tweet as tokens (words)
+Macy_1_7_16_words <- get_tokens(Macy_1_7_16, pattern = "\\W")
+Macy_12_4_15_words <- get_tokens(Macy_12_4_15, pattern = "\\W")
+Macy_11_23_15_words <- get_tokens(Macy_11_23_15, pattern = "\\W")
+Macy_11_16_15_words <- get_tokens(Macy_11_16_15, pattern = "\\W")
+```
+
+```{r}
+### Sentiment of Macy tweet as sentences
+Macy_1_7_16_ments <- get_sentiment(Macy_1_7_16_sentences, method="afinn")
+Macy_12_4_15_ments <- get_sentiment(Macy_12_4_15_sentences, method="afinn")
+Macy_11_23_15_ments <- get_sentiment(Macy_11_23_15_sentences, method="afinn")
+Macy_11_16_15_ments <- get_sentiment(Macy_11_16_15_sentences, method="afinn")
+```
+
+```{r}
+### Sentiment of Macy tweet as words
+Macy_1_7_16_mentw <- get_sentiment(Macy_1_7_16_words, method="afinn")
+Macy_12_4_15_mentw <- get_sentiment(Macy_12_4_15_words, method="afinn")
+Macy_11_23_15_mentw <- get_sentiment(Macy_11_23_15_words, method="afinn")
+Macy_11_16_15_mentw <- get_sentiment(Macy_11_16_15_words, method="afinn")
+```
+
+```{r}
+### Sentiment analysis of Macy tweet as sentences
+Macy_1_7_16_ments
+Macy_12_4_15_ments
+Macy_11_23_15_ments
+Macy_11_16_15_ments
+```
+
+```{r}
+### Sentiment analysis of Macy tweet as words
+Macy_1_7_16_mentw
+Macy_12_4_15_mentw
+Macy_11_23_15_mentw
+Macy_11_16_15_mentw
+```
+
+```{r}
+### Summation of Sentiment analysis of Macy tweet as sentences
+sum(Macy_1_7_16_ments)
+sum(Macy_12_4_15_ments)
+sum(Macy_11_23_15_ments)
+sum(Macy_11_16_15_ments)
+
+#Mean
+mean(Macy_1_7_16_ments)
+mean(Macy_12_4_15_ments)
+mean(Macy_11_23_15_ments)
+mean(Macy_11_16_15_ments)
+```
+
+```{r}
+### Summation of Sentiment analysis of Macy tweet as words
+sum(Macy_1_7_16_mentw)
+sum(Macy_12_4_15_mentw)
+sum(Macy_11_23_15_mentw)
+sum(Macy_11_16_15_mentw)
+
+#Mean
+mean(Macy_1_7_16_mentw)
+mean(Macy_12_4_15_mentw)
+mean(Macy_11_23_15_mentw)
+mean(Macy_11_16_15_mentw)
+```
+
+```{r}
+### Summary of sentiment analysis of Google tweet as sentences
+summary(Macy_1_7_16_ments)
+summary(Macy_12_4_15_ments)
+summary(Macy_11_23_15_ments)
+summary(Macy_11_16_15_ments)
+```
+
+```{r}
+### Summary of sentiment analysis of Google tweet as words
+summary(Macy_1_7_16_mentw)
+summary(Macy_12_4_15_mentw)
+summary(Macy_11_23_15_mentw)
+summary(Macy_11_16_15_mentw)
+```
+

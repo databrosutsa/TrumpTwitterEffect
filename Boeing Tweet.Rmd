@@ -1,0 +1,73 @@
+---
+title: "Boeing Tweet"
+author: "Manuel Perez"
+date: "October 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(syuzhet)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(readr)
+```
+
+```{r}
+###Boeing Tweet on August 3, 2018
+Boeing_8_3_18 <- "NASA, which is making a BIG comeback under the Trump Administration, has just named 9 astronauts for Boeing and Spacex space flights. We have the greatest facilities in the world and we are now letting the private sector pay to use them. Exciting things happening. Space Force!"
+```
+
+```{r}
+###Boeing Tweet on Febraury 17, 2017
+Boeing_2_17_17 <- "Going to Charleston, South Carolina, in order to spend time with Boeing and talk jobs! Look forward to it."
+```
+
+```{r}
+###Boeing Tweet on December 22, 2016
+Boeing_12_22_16 <- "Based on the tremendous cost and cost overruns of the Lockheed Martin F-35, I have asked Boeing to price-out a comparable F-18 Super Hornet!"
+```
+
+```{r}
+###Boeing Tweet on December 6, 2016
+Boeing_12_6_16 <- "Boeing is building a brand new 747 Air Force One for future presidents, but costs are out of control, more than $4 billion. Cancel order!"
+```
+
+```{r}
+###Boeing Tweet on March 20, 2014
+Boeing_3_20_14 <- "Lithium ion batteries should not be allowed to be used in aircraft. I won't fly on the Boeing 787 Dreamliner - it uses those batteries."
+```
+
+```{r}
+### Breaks up into sentences
+Boeing_8_3_18_sentences <- get_sentences(Boeing_8_3_18)
+Boeing_2_17_17_sentences <- get_sentences(Boeing_2_17_17)
+Boeing_12_22_16_sentences <- get_sentences(Boeing_12_22_16)
+Boeing_12_6_16_sentences <- get_sentences(Boeing_12_6_16)
+Boeing_3_20_14_sentences <- get_sentences(Boeing_3_20_14)
+```
+
+```{r}
+###If want tweet as tokens (words)
+Boeing_8_3_18_words <- get_tokens(Boeing_8_3_18, pattern = "\\W")
+Boeing_2_17_17_words <- get_tokens(Boeing_2_17_17, pattern = "\\W")
+Boeing_12_22_16_words <- get_tokens(Boeing_12_22_16, pattern = "\\W")
+Boeing_12_6_16_words <- get_tokens(Boeing_12_6_16, pattern = "\\W")
+Boeing_3_20_14_words <- get_tokens(Boeing_3_20_14, pattern = "\\W")
+```
+
+
+```{r}
+### Sentiment of Boeing tweet as sentences
+Boeing_8_3_18_ments <- get_sentiment(Boeing_8_3_18_sentences, method="afinn")
+Boeing_2_17_17_ments <- get_sentiment(Boeing_2_17_17_sentences, method="afinn")
+Boeing_12_22_16_ments <- get_sentiment(Boeing_12_22_16_sentences, method="afinn")
+Boeing_12_6_16_ments <- get_sentiment(Boeing_12_6_16_sentences, method="afinn")
+Boeing_3_20_14_ments <- get_sentiment(Boeing_3_20_14_sentences, method="afinn")
+```
+

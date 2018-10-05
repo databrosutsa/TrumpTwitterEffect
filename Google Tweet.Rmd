@@ -9,80 +9,132 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(syuzhet)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(readr)
+```
 
 
 ```{r}
 ### Google Tweet on August 28,2018
-TWGoogle <- "Google search results for “Trump News” shows only the viewing/reporting of Fake News Media. In other words they have it RIGGED for me &amp; others so that almost all stories &amp; news is BAD. Fake CNN is prominent. Republican/Conservative &amp; Fair Media is shut out. Illegal? 96% of results on “Trump News” are from National Left-Wing Media very dangerous. Google &amp; others are suppressing voices of Conservatives and hiding information and news that is good. They are controlling what we can &amp; cannot see. This is a very serious situation-will be addressed!"
+Google_8_28_18 <- "Google search results for “Trump News” shows only the viewing/reporting of Fake News Media. In other words they have it RIGGED for me &amp; others so that almost all stories &amp; news is BAD. Fake CNN is prominent. Republican/Conservative &amp; Fair Media is shut out. Illegal? 96% of results on “Trump News” are from National Left-Wing Media very dangerous. Google &amp; others are suppressing voices of Conservatives and hiding information and news that is good. They are controlling what we can &amp; cannot see. This is a very serious situation-will be addressed!"
 ```
+
+```{r}
+### Google Tweet on July 19,2018
+Google_7_19_18 <- "I told you so! The European Union just slapped a Five Billion Dollar fine on one of our great companies Google. They truly have taken advantage of the U.S. but not for long!"
+```
+
+```{r}
+### Google Tweet on October 30, 2016
+Google_10_30_16 <- "Wow Twitter Google and Facebook are burying the FBI criminal investigation of Clinton. Very dishonest media!"
+```
+
+
+
 
 ```{r}
 ### Breaks up into sentences
-TWGoogle_sent <- get_sentences(TWGoogle)
+Google_8_28_18_sentences <- get_sentences(Google_8_28_18)
+Google_7_19_18_sentences <- get_sentences(Google_7_19_18)
+Google_10_30_16_sentences <- get_sentences(Google_10_30_16)
 ```
+
 
 ```{r}
 ### General attributes of Google senetences
-class(TWGoogle_sent)
-str(TWGoogle_sent)
-head(TWGoogle_sent)
+class(Google_8_28_18_sentences)
+str(Google_8_28_18_sentences)
+head(Google_8_28_18_sentences)
 ```
 
 
 ```{r}
 ###If want Google tweet as tokens (words)
-TWGoogle_word <- get_tokens(TWGoogle, pattern = "\\W")
+Google_8_28_18_words <- get_tokens(Google_8_28_18, pattern = "\\W")
+Google_7_19_18_words <- get_tokens(Google_7_19_18, pattern = "\\W")
+Google_10_30_16_words <- get_tokens(Google_10_30_16, pattern = "\\W")
 ```
 
 ```{r}
 ### Head of Google tweet as words
-head(TWGoogle_word)
+head(Google_8_28_18_words)
 ```
 
 ```{r}
 ### Sentiment of Google tweet as sentences
-TWGoogle_Ment <- get_sentiment(TWGoogle_sent, method="syuzhet")
+Google_8_28_18__ments <- get_sentiment(Google_8_28_18_sentences, method="afinn")
+Google_7_19_18_ments <- get_sentiment(Google_7_19_18_sentences, method="afinn")
+Google_10_30_16_ments <- get_sentiment(Google_10_30_16_sentences, method="afinn")
 ```
 
 ```{r}
 ### Sentiment of Google tweet as words
-TWGoogle_Mentw <- get_sentiment(TWGoogle_word, method="syuzhet")
+Google_8_28_18__mentw <- get_sentiment(Google_8_28_18_words, method="afinn")
+Google_7_19_18_mentw <- get_sentiment(Google_7_19_18_words, method="afinn")
+Google_10_30_16_mentw <- get_sentiment(Google_10_30_16_words, method="afinn")
 ```
 
 ```{r}
 ### Sentiment analysis of Google tweet as sentences
-TWGoogle_Ment
+Google_8_28_18__ments
+Google_7_19_18_ments
+Google_10_30_16_ments
 ```
 
 ```{r}
 ### Sentiment analysis of Google tweet as words
-TWGoogle_Mentw
+Google_8_28_18__mentw
+Google_7_19_18_mentw
+Google_10_30_16_ment
 ```
 
 
 ```{r}
 ### Summation of Sentiment analysis of Google tweet as sentences
-sum(TWGoogle_Ment)
+sum(Google_8_28_18__ments)
+sum(Google_7_19_18_ments)
+sum(Google_10_30_16_ments)
+
+#Mean
+mean(Google_8_28_18__ments)
+mean(Google_7_19_18_ments)
+mean(Google_10_30_16_ments)
 ```
 
 ```{r}
-### Summation of Sentiment analysis of Google tweet as word
-sum(TWGoogle_Mentw)
+### Summation of Sentiment analysis of Google tweet as words
+sum(Google_8_28_18__mentw)
+sum(Google_7_19_18_mentw)
+sum(Google_10_30_16_mentw)
+
+#Mean
+mean(Google_8_28_18__mentw)
+mean(Google_7_19_18_mentw)
+mean(Google_10_30_16_mentw)
 ```
 
 ```{r}
 ### Summary of sentiment analysis of Google tweet as sentences
-summary(TWGoogle_Ment)
+summary(Google_8_28_18__ments)
+summary(Google_7_19_18_ments)
+summary(Google_10_30_16_ments)
 ```
 
 ```{r}
 ### Summary of sentiment analysis of Google tweet as words
-summary(TWGoogle_Mentw)
+summary(Google_8_28_18__mentw)
+summary(Google_7_19_18_mentw)
+summary(Google_10_30_16_mentw)
 ```
 
 ```{r}
 plot(
-  TWGoogle_Ment, 
+  Google_8_28_18__ments, 
   type="l", 
   main="Example Plot Trajectory", 
   xlab = "Narrative Time", 
@@ -92,12 +144,12 @@ plot(
 
 ```{r}
 plot(
-  TWGoogle_Mentw, 
+  Google_8_28_18__mentw, 
   type="l", 
   main="Example Plot Trajectory", 
   xlab = "Narrative Time", 
   ylab= "Emotional Valence"
-)
+) 
 ```
 
 ```{r}

@@ -1,0 +1,21 @@
+#Documentation
+
+This R code creates a function to clean tweets for sentiment analysis. 
+The clean tweet function removes the following:
+
+Retweet entities. 
+Removes "@username" labels.
+Removes punctuation.
+Removes numbers.
+Removes html links.
+Removes unnecessary spaces.
+Removes emojis or special characters
+
+
+
+The code also applies a number of different analytical functions and plots on the cleaned tweets. 
+Such as sentiment scoring across four different lexicons, emotion scoring using the NRC dictionary, 
+comparison word cloud, narrative timelines, emotional plot trajectory etc. 
+
+Note this folder also contains sentiment scoring for all companies in the project. In addition, the code
+sentiment scores all the president's tweets. 

@@ -1,0 +1,22 @@
+
+# Variable Naming conventions: camelCase
+# Not OOP, so lots of repeated code.
+# fix later
+
+
+1. Load tweets
+2. Create function to clean tweets
+3. Clean tweets with function
+4. Assign tweets to variables of class data.frame
+5. Extract the timestamps from tweets (for use later with plots)
+6. Get sentiments using the four different lexicons for all trump tweets and each different company.
+7. Get emotions for all the tweet data and prepare data for bar chart of distribution of emotion
+categories. 
+8. Plot the different sentiments from different methods.
+9. Visualize the emotions from NRC sentiments
+10. Prepare comparison word cloud
+11. Create corpus of words (body of words)
+12. Create term-document matrix
+13. Convert as matrix
+14. Add column names
+15. Create actual comparison word cloud with use of comparison.cloud()

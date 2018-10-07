@@ -1,0 +1,778 @@
+---
+title: "Automated Sentiment Analysis"
+author: "Ray Flores"
+date: "October 6, 2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(syuzhet)
+library(wordcloud)
+library(ggplot2)
+library(MASS)
+library(pastecs)
+library(shiny)
+library(shinydashboard)
+library(ggthemes)
+library(tidytext)
+library(tidyverse)
+library(tm)
+library(lubridate)
+library(stringr)
+library(reader)
+library(csvread)
+library(twitteR)
+library(devtools)
+#if(!require(Rstem)) install_url("http://cran.r-project.org/src/contrib/Archive/Rstem/Rstem_0.4-1.tar.gz")
+#if(!require(sentiment)) install_url("http://cran.r-project.org/src/contrib/Archive/sentiment/sentiment_0.2.tar.gz")
+#library(Rstem)
+#library(sentiment)
+library(plotly)
+library(dplyr)
+library(Quandl)
+library(magrittr)
+library(tseries)
+
+
+
+### All Trump Tweets
+allTrumpTweets <- read.csv(file="AllTrumpTweets.csv",head=TRUE,sep=",")
+
+
+### Essential Companies
+amazon <- read.csv(file="Amazon.csv",head=TRUE,sep=",")
+apple <- read.csv(file="Apple.csv",head=TRUE,sep=",")
+boeing <- read.csv(file="Boeing.csv",head=TRUE,sep=",")
+facebook <- read.csv(file="Facebook.csv",head=TRUE,sep=",")
+ford <- read.csv(file="Ford.csv",head=TRUE,sep=",")
+google <- read.csv(file="Google.csv",head=TRUE,sep=",")
+macys <- read.csv(file="Macy's.csv",head=TRUE,sep=",")
+nbc <- read.csv(file="NBC.csv", head=TRUE,sep=",")
+newYorkTimes <- read.csv(file="NewYorkTimes.csv", head=TRUE,sep=",")
+
+### Tentative inclusion
+generalMotors <- read.csv(file="GeneralMotors.csv",head=TRUE,sep=",")
+lockheed <- read.csv(file="Lockheed.csv",head=TRUE,sep=",")
+merck <- read.csv(file="Merck.csv", head=TRUE,sep=",")
+nordstrom <- read.csv(file="Nordstrom.csv", head=TRUE,sep=",")
+pfizer <- read.csv(file="Pfizer.csv", head=TRUE,sep=",")
+tmobile <- read.csv(file="T-mobile.csv", head=TRUE,sep=",")
+toyota <- read.csv(file="Toyota.csv", head=TRUE,sep=",")
+cbs <- read.csv(file="CBS.csv",head=TRUE,sep=",")
+nbc <- read.csv(file="NBC.csv", head=TRUE,sep=",")
+twitter <- read.csv(file="Twitter.csv", head=TRUE,sep=",")
+
+### Market Sentiment Data from Quandl
+### The AAII Investor Sentiment Survey measures the percentage of individual investors who are bullish, 
+### bearish, and neutral on the stock market for the next six months; individuals are polled from the 
+### ranks of the AAII membership on a weekly basis. Only one vote per member is accepted in each weekly 
+### voting period.
+
+### Investor sentiment for the past 5 years, 2013 to 2018
+investorMarketSentiment <- Quandl("AAII/AAII_SENTIMENT", start_date='2013-10-04', end_date='2018-10-04')
+
+
+
+# Function for cleaning tweets
+cleanTweets <- function (tweets) {
+  
+  clean_tweets = sapply(tweets, function(x) x$getText())
+  # remove retweet entities
+  clean_tweets = gsub('(RT|via)((?:\\b\\W*@\\w+)+)', '', clean_tweets)
+  # remove @people
+  clean_tweets = gsub('@\\w+', '', clean_tweets)
+  # remove punctuation
+  clean_tweets = gsub('[[:punct:]]', '', clean_tweets)
+  # remove numbers
+  clean_tweets = gsub('[[:digit:]]', '', clean_tweets)
+  # remove html links
+  clean_tweets = gsub('http\\w+', '', clean_tweets)
+  # remove unnecessary spaces
+  clean_tweets = gsub('[ \t]{2,}', '', clean_tweets)
+  clean_tweets = gsub('^\\s+|\\s+$', '', clean_tweets)
+  # remove emojis or special characters
+  clean_tweets = gsub('<.*>', '', enc2native(clean_tweets))
+  
+  clean_tweets = tolower(clean_tweets)
+  
+  clean_tweets
+}
+
+### Vector of company names, if needed available
+companies <- factor(c("Amazon", "Apple", "Google", "Facebook", "Boeing", "Ford"))
+
+### Use the function defined above to clean the tweets by the president 
+### and separate according to columns 
+is.recursive(allTrumpTweets)
+
+trumpTweets = cleanTweets(allTrumpTweets["text"])
+
+### Company tweets
+amazonTweets <- cleanTweets(amazon["text"])
+appleTweets <- cleanTweets(apple["text"])
+boeingTweets <- cleanTweets(boeing["text"])
+facebookTweets <- cleanTweets(facebook["text"])
+fordTweets <- cleanTweets(ford["text"])
+googleTweets <- cleanTweets(google["text"])
+macysTweets <- cleanTweets(macys["text"])
+newYorkTimesTweets <- cleanTweets(newYorkTimes["text"])
+
+### Extract the timestamp from each Company Presidential Tweet Table
+
+
+# Trump
+trumpTimeStamp <- as.POSIXct(sapply(allTrumpTweets["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+trumpTimeStamp <- trumpTimeStamp[!duplicated(allTrumpTweets["text"])]
+trumpTweets <- trumpTweets[!duplicated(allTrumpTweets["text"])]
+
+
+# Amazon
+amazonTimeStamp <- as.POSIXct(sapply(amazon["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+amazonTimeStamp <- amazonTimeStamp[!duplicated(amazon["text"])]
+amazonTweets <- amazonTweets[!duplicated(amazon["text"])]
+
+# Apple
+appleTimeStamp <- as.POSIXct(sapply(apple["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+appleTimeStamp <- appleTimeStamp[!duplicated(apple["text"])]
+appleTweets <- appleTweets[!duplicated(apple["text"])]
+
+# Boeing
+boeingTimeStamp <- as.POSIXct(sapply(boeing["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+boeingTimeStamp <- boeingTimeStamp[!duplicated(boeing["text"])]
+boeingTweets <- boeingTweets[!duplicated(boeing["text"])]
+
+# Facebook
+facebookTimeStamp <- as.POSIXct(sapply(facebook["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+facebookTimeStamp <- facebookTimeStamp[!duplicated(facebook["text"])]
+facebookTweets <- facebookTweets[!duplicated(facebook["text"])]
+
+# Ford
+fordTimeStamp <- as.POSIXct(sapply(ford["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+fordTimeStamp <- fordTimeStamp[!duplicated(ford["text"])]
+fordTweets <- fordTweets[!duplicated(ford["text"])]
+
+# Google
+googleTimeStamp <- as.POSIXct(sapply(google["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+googleTimeStamp <- googleTimeStamp[!duplicated(google["text"])]
+googleTweets <- googleTweets[!duplicated(google["text"])]
+
+# Macys
+macysTimeStamp <- as.POSIXct(sapply(macys["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+macysTimeStamp <- macysTimeStamp[!duplicated(macys["text"])]
+macysTweets <- macysTweets[!duplicated(macys["text"])]
+
+# New York Times
+newYorkTimesTimeStamp <- as.POSIXct(sapply(newYorkTimes["created_at"], function(x)x$getCreated()), origin="1970-01-01", tz="GMT")
+newYorkTimesTimeStamp <- newYorkTimesTimeStamp[!duplicated(newYorkTimes["text"])]
+newYorkTimesTweets <- newYorkTimesTweets[!duplicated(newYorkTimes["text"])]
+
+
+### Get sentiments using the four different lexicons for all trump tweets and each different company
+
+# Trump
+trumpSyuzhet <- get_sentiment(trumpTweets, method="syuzhet")
+trumpBing <- get_sentiment(trumpTweets, method="bing")
+trumpAfinn <- get_sentiment(trumpTweets, method="afinn")
+trumpNrc <- get_sentiment(trumpTweets, method="nrc")
+trumpSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Amazon
+amazonSyuzhet <- get_sentiment(amazonTweets, method="syuzhet")
+amazonBing <- get_sentiment(amazonTweets, method="bing")
+amazonAfinn <- get_sentiment(amazonTweets, method="afinn")
+amazonNrc <- get_sentiment(amazonTweets, method="nrc")
+amazonSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Apple
+appleSyuzhet <- get_sentiment(appleTweets, method="syuzhet")
+appleBing <- get_sentiment(appleTweets, method="bing")
+appleAfinn <- get_sentiment(appleTweets, method="afinn")
+appleNrc <- get_sentiment(appleTweets, method="nrc")
+appleSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Boeing
+boeingSyuzhet <- get_sentiment(boeingTweets, method="syuzhet")
+boeingBing <- get_sentiment(boeingTweets, method="bing")
+boeingAfinn <- get_sentiment(boeingTweets, method="afinn")
+boeingNrc <- get_sentiment(boeingTweets, method="nrc")
+boeingSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Facebook
+facebookSyuzhet <- get_sentiment(facebookTweets, method="syuzhet")
+facebookBing <- get_sentiment(facebookTweets, method="bing")
+facebookAfinn <- get_sentiment(facebookTweets, method="afinn")
+facebookNrc <- get_sentiment(facebookTweets, method="nrc")
+facebookSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Ford
+fordSyuzhet <- get_sentiment(fordTweets, method="syuzhet")
+fordBing <- get_sentiment(fordTweets, method="bing")
+fordAfinn <- get_sentiment(fordTweets, method="afinn")
+fordNrc <- get_sentiment(fordTweets, method="nrc")
+fordSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Google
+googleSyuzhet <- get_sentiment(googleTweets, method="syuzhet")
+googleBing <- get_sentiment(googleTweets, method="bing")
+googleAfinn <- get_sentiment(googleTweets, method="afinn")
+googleNrc <- get_sentiment(googleTweets, method="nrc")
+googleSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# Macys
+macysSyuzhet <- get_sentiment(macysTweets, method="syuzhet")
+macysBing <- get_sentiment(macysTweets, method="bing")
+macysAfinn <- get_sentiment(macysTweets, method="afinn")
+macysNrc <- get_sentiment(macysTweets, method="nrc")
+macysSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+# New York Times
+newYorkTimesSyuzhet <- get_sentiment(newYorkTimesTweets, method="syuzhet")
+newYorkTimesBing <- get_sentiment(newYorkTimesTweets, method="bing")
+newYorkTimesAfinn <- get_sentiment(newYorkTimesTweets, method="afinn")
+newYorkTimesNrc <- get_sentiment(newYorkTimesTweets, method="nrc")
+newYorkTimesSentiments <- data.frame(syuzhet, bing, afinn, nrc, timestamp)
+
+
+### Get emotions of president's tweets for each different company
+# get the emotions using the NRC dictionary
+# template
+#
+
+# Trump
+trumpEmotions <- get_nrc_sentiment(trumpTweets)
+trumpEmoBar = colSums(trumpEmotions)
+trumpEmoSum = data.frame(count=trumpEmoBar, emotion=names(trumpEmoBar))
+trumpEmoSum$emotion = factor(trumpEmoSum$emotion, levels=trumpEmoSum$emotion[order(trumpEmoSum$count, decreasing = TRUE)])
+
+# Amazon
+amazonEmotions <- get_nrc_sentiment(amazonTweets)
+amazonEmoBar = colSums(amazonEmotions)
+amazonEmoSum = data.frame(count=amazonEmoBar, emotion=names(amazonEmoBar))
+amazonEmoSum$emotion = factor(amazonEmoSum$emotion, levels=amazonEmoSum$emotion[order(amazonEmoSum$count, decreasing = TRUE)])
+
+# Apple
+appleEmotions <- get_nrc_sentiment(appleTweets)
+appleEmoBar = colSums(appleEmotions)
+appleEmoSum = data.frame(count=appleEmoBar, emotion=names(appleEmoBar))
+appleEmoSum$emotion = factor(appleEmoSum$emotion, levels=appleEmoSum$emotion[order(appleEmoSum$count, decreasing = TRUE)])
+
+# Boeing
+boeingEmotions <- get_nrc_sentiment(boeingTweets)
+boeingEmoBar = colSums(boeingEmotions)
+boeingEmoSum = data.frame(count=boeingEmoBar, emotion=names(boeingEmoBar))
+boeingEmoSum$emotion = factor(boeingEmoSum$emotion, levels=boeingEmoSum$emotion[order(boeingEmoSum$count, decreasing = TRUE)])
+
+# Facebook
+facebookEmotions <- get_nrc_sentiment(facebookTweets)
+facebookEmoBar = colSums(facebookEmotions)
+facebookEmoSum = data.frame(count=facebookEmoBar, emotion=names(facebookEmoBar))
+facebookEmoSum$emotion = factor(facebookEmoSum$emotion, levels=facebookEmoSum$emotion[order(facebookEmoSum$count, decreasing = TRUE)])
+
+# Ford
+fordEmotions <- get_nrc_sentiment(fordTweets)
+fordEmoBar = colSums(fordEmotions)
+fordEmoSum = data.frame(count=fordEmoBar, emotion=names(fordEmoBar))
+fordEmoSum$emotion = factor(fordEmoSum$emotion, levels=fordEmoSum$emotion[order(fordEmoSum$count, decreasing = TRUE)])
+
+# Google
+googleEmotions <- get_nrc_sentiment(googleTweets)
+googleEmoBar = colSums(googleEmotions)
+googleEmoSum = data.frame(count=googleEmoBar, emotion=names(googleEmoBar))
+googleEmoSum$emotion = factor(googleEmoSum$emotion, levels=googleEmoSum$emotion[order(googleEmoSum$count, decreasing = TRUE)])
+
+# Macys
+macysEmotions <- get_nrc_sentiment(macysTweets)
+macysEmoBar = colSums(macysEmotions)
+macysEmoSum = data.frame(count=macysEmoBar, emotion=names(macysEmoBar))
+macysEmoSum$emotion = factor(macysEmoSum$emotion, levels=macysEmoSum$emotion[order(macysEmoSum$count, decreasing = TRUE)])
+
+# New York Times
+newYorkTimesEmotions <- get_nrc_sentiment(newYorkTimesTweets)
+newYorkTimesEmoBar = colSums(newYorkTimesEmotions)
+newYorkTimesEmoSum = data.frame(count=newYorkTimesEmoBar, emotion=names(newYorkTimesEmoBar))
+newYorkTimesEmoSum$emotion = factor(newYorkTimesEmoSum$emotion, levels=newYorkTimesEmoSum$emotion[order(newYorkTimesEmoSum$count, decreasing = TRUE)])
+
+
+
+###
+### plot the different sentiments from different methods
+###
+
+# Trump
+plot_ly(trumpSentiments, x=~trumpTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Tweet Sentiment Since Joining Twitter",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Amazon
+plot_ly(amazonSentiments, x=~amazonTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Amazon",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Apple
+plot_ly(appleSentiments, x=~appleTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Apple",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Boeing
+plot_ly(boeingSentiments, x=~boeingTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Boeing",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Facebook
+plot_ly(facebookSentiments, x=~facebookTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Facebook",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Ford
+plot_ly(fordSentiments, x=~fordTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Ford",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Google
+plot_ly(googleSentiments, x=~googleTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Google",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# Macys
+plot_ly(macysSentiments, x=~macysTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company Macy's",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+# New York Times
+plot_ly(newYorkTimesSentiments, x=~newYorkTimesTimeStamp, y=~syuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~bing, mode="lines", name="bing") %>%
+  add_trace(y=~afinn, mode="lines", name="afinn") %>%
+  add_trace(y=~nrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company New York Times",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+
+# Visualize the emotions from NRC sentiments
+
+# Trump
+plot_ly(trumpEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for all Trump Tweets")
+
+# Amazon
+plot_ly(amazonEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Amazon Related Trump Tweets")
+
+# Apple
+plot_ly(appleEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Apple Related Trump Tweets")
+
+# Boeing
+plot_ly(boeingEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Boeing Related Trump Tweets")
+
+# Facebook
+plot_ly(facebookEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Facebook Related Trump Tweets")
+
+# Ford
+plot_ly(fordEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Ford Related Trump Tweets")
+
+# Google
+plot_ly(googleEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Google Related Trump Tweets")
+
+# Macys
+plot_ly(macysEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for Macy's Related Trump Tweets")
+
+# New York Times
+plot_ly(newYorkTimesEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for New York Times Related Trump Tweets")
+
+
+trumpTweets
+amazonTweets 
+appleTweets 
+boeingTweets 
+facebookTweets 
+fordTweets 
+googleTweets 
+macysTweets 
+newYorkTimesTweets 
+
+
+### Comparison word cloud
+
+# Trump
+trumpAll = c(
+  paste(trumpTweets[trumpEmotions$anger > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$anticipation > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$disgust > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$fear > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$joy > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$sadness > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$surprise > 0], collapse=" "),
+  paste(trumpTweets[trumpEmotions$trust > 0], collapse=" ")
+)
+trumpAll <- removeWords(trumpAll, stopwords("english"))
+
+
+# Amazon
+amazonAll = c(
+  paste(amazonTweets[amazonEmotions$anger > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$anticipation > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$disgust > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$fear > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$joy > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$sadness > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$surprise > 0], collapse=" "),
+  paste(amazonTweets[amazonEmotions$trust > 0], collapse=" ")
+)
+amazonAll <- removeWords(amazonAll, stopwords("english"))
+
+# Apple
+appleAll = c(
+  paste(appleTweets[appleEmotions$anger > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$anticipation > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$disgust > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$fear > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$joy > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$sadness > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$surprise > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$trust > 0], collapse=" ")
+)
+appleAll <- removeWords(appleAll, stopwords("english"))
+
+# Boeing
+boeingAll = c(
+  paste(boeingTweets[boeingEmotions$anger > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$anticipation > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$disgust > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$fear > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$joy > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$sadness > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$surprise > 0], collapse=" "),
+  paste(boeingTweets[boeingEmotions$trust > 0], collapse=" ")
+)
+boeingAll <- removeWords(boeingAll, stopwords("english"))
+
+# Facebook
+facebookAll = c(
+  paste(facebookTweets[facebookEmotions$anger > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$anticipation > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$disgust > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$fear > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$joy > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$sadness > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$surprise > 0], collapse=" "),
+  paste(facebookTweets[facebookEmotions$trust > 0], collapse=" ")
+)
+facebookAll <- removeWords(facebookAll, stopwords("english"))
+
+# Ford
+fordAll = c(
+  paste(fordTweets[fordEmotions$anger > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$anticipation > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$disgust > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$fear > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$joy > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$sadness > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$surprise > 0], collapse=" "),
+  paste(fordTweets[fordEmotions$trust > 0], collapse=" ")
+)
+fordAll <- removeWords(fordAll, stopwords("english"))
+
+# Google
+googleAll = c(
+  paste(googleTweets[googleEmotions$anger > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$anticipation > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$disgust > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$fear > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$joy > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$sadness > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$surprise > 0], collapse=" "),
+  paste(googleTweets[googleEmotions$trust > 0], collapse=" ")
+)
+googleAll <- removeWords(googleAll, stopwords("english"))
+
+# Macy's
+macysAll = c(
+  paste(macysTweets[maycsEmotions$anger > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$anticipation > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$disgust > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$fear > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$joy > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$sadness > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$surprise > 0], collapse=" "),
+  paste(macysTweets[maycsEmotions$trust > 0], collapse=" ")
+)
+macysAll <- removeWords(macysAll, stopwords("english"))
+
+# New York Times
+newYorkTimesAll = c(
+  paste(newYorkTimesTweets[newYorkTimesEmotions$anger > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$anticipation > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$disgust > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$fear > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$joy > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$sadness > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$surprise > 0], collapse=" "),
+  paste(newYorkTimesTweets[newYorkTimesEmotions$trust > 0], collapse=" ")
+)
+newYorkTimesAll <- removeWords(newYorkTimesAll, stopwords("english"))
+
+
+# create corpus
+
+# Trump
+trumpCorpus = Corpus(VectorSource(trumpAll))
+
+# Amazon
+amazonCorpus = Corpus(VectorSource(amazonAll))
+
+# Apple
+appleCorpus = Corpus(VectorSource(appleAll))
+
+# Boeing
+boeingCorpus = Corpus(VectorSource(boeingAll))
+
+# Facebook
+facebookCorpus = Corpus(VectorSource(facebookAll))
+
+# Ford
+fordCorpus = Corpus(VectorSource(fordAll))
+
+# Google
+googleCorpus = Corpus(VectorSource(googleAll))
+
+# Macy's
+macysCorpus = Corpus(VectorSource(macysAll))
+
+# New York Times
+newYorkTimesCorpus = Corpus(VectorSource(newYorkTimesAll))
+
+
+#
+### create term-document matrix
+#
+
+# Trump
+trumpTdm = TermDocumentMatrix(trumpCorpus)
+
+# Amazon
+amazonTdm = TermDocumentMatrix(amazonCorpus)
+
+# Apple
+appleTdm = TermDocumentMatrix(appleCorpus)
+
+# Boeing
+boeingTdm = TermDocumentMatrix(boeingCorpus)
+
+# Facebook
+facebookTdm = TermDocumentMatrix(facebookCorpus)
+
+# Ford
+fordTdm = TermDocumentMatrix(fordCorpus)
+
+# Google
+googleTdm = TermDocumentMatrix(googleCorpus)
+
+# Macy's
+macysTdm = TermDocumentMatrix(macysCorpus)
+
+# New York Times
+newYorkTimesTdm = TermDocumentMatrix(newYorkTimesCorpus)
+
+
+
+
+#
+### convert as matrix
+#
+
+# Trump
+trumpTdm = as.matrix(trumpTdm)
+trumpTdm1 <- trumpTdm[nchar(rownames(trumpTdm)) < 11,]
+
+# Amazon
+amazonTdm = as.matrix(amazonTdm)
+amazonTdm1 <- amazonTdm[nchar(rownames(amazonTdm)) < 11,]
+
+# Apple
+appleTdm = as.matrix(appleTdm)
+appleTdm1 <- appleTdm[nchar(rownames(appleTdm)) < 11,]
+
+# Boeing
+boeingTdm = as.matrix(boeingTdm)
+boeingTdm1 <- boeingTdm[nchar(rownames(boeingTdm)) < 11,]
+
+# Facebook
+facebookTdm = as.matrix(facebookTdm)
+facebookTdm1 <- facebookTdm[nchar(rownames(facebookTdm)) < 11,]
+
+# Ford
+fordTdm = as.matrix(fordTdm)
+fordTdm1 <- fordTdm[nchar(rownames(fordTdm)) < 11,]
+
+# Google
+googleTdm = as.matrix(googleTdm)
+googleTdm1 <- googleTdm[nchar(rownames(googleTdm)) < 11,]
+
+# Macy's
+macysTdm = as.matrix(macysTdm)
+macysTdm1 <- macysTdm[nchar(rownames(macysTdm)) < 11,]
+
+# New York Times
+newYorkTimesTdm = as.matrix(newYorkTimesTdm)
+newYorkTimesTdm1 <- newYorkTimesTdm[nchar(rownames(newYorkTimesTdm)) < 11,]
+
+
+
+#
+### add column names
+#
+
+# Trump
+colnames(trumpTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(trumpTdm1) <- colnames(trumpTdm)
+
+# Amazon
+colnames(amazonTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(amazonTdm1) <- colnames(amazonTdm)
+
+# Apple
+colnames(appleTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(appleTdm1) <- colnames(appleTdm)
+
+# Boeing
+colnames(boeingTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(boeingTdm1) <- colnames(boeingTdm)
+
+# Facebook
+colnames(facebookTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(facebookTdm1) <- colnames(facebookTdm)
+
+# Ford
+colnames(fordTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(fordTdm1) <- colnames(fordTdm)
+
+# Google
+colnames(googleTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(googleTdm1) <- colnames(googleTdm)
+
+# Macy's
+colnames(macysTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(macysTdm1) <- colnames(macysTdm)
+
+# New York Times
+colnames(newYorkTimesTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(newYorkTimesTdm1) <- colnames(newYorkTimesTdm)
+
+
+
+### Generate Comparison Clouds for all Trump tweets and Companies
+
+
+
+comparison.cloud(Tdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Trump
+comparison.cloud(trumpTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Amazon
+comparison.cloud(amazonTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Apple
+comparison.cloud(appleTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Boeing
+comparison.cloud(boeingTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Facebook
+comparison.cloud(facebookTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Ford
+comparison.cloud(fordTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Google
+comparison.cloud(googleTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# Macy's
+comparison.cloud(macysTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+# New York Times
+comparison.cloud(newYorkTimesTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=250, scale=c(2.5, 0.4),rot.per=0.4)
+
+```
+
+
+
+# Amazon
+
+# Apple
+
+# Google
+
+# Boeing
+
+# Facebook
+
+# Ford
+
+# Google
+
+# Macy's 
+
+# New York Times

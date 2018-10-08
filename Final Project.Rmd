@@ -1,0 +1,191 @@
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(lubridate)
+library(quantmod)
+library(Quandl)
+library(ggthemes)
+```
+
+
+```{r}
+getSymbols("GOOG", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+getSymbols("AMZN", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+getSymbols("FB", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+getSymbols("AAPL", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+getSymbols("FDO.F", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+getSymbols("BA", src = 'yahoo', from = '2014-03-01', to = '2018-08-30')
+getSymbols("F", src = 'yahoo', from = '2015-01-30', to = '2018-09-30')
+getSymbols("NYT", src = 'yahoo', from = '2015-07-30', to = '2018-08-30')
+
+nasdaqdata <- Quandl("NASDAQOMX/COMP", api_key = 'ZD8hU_zfyaksm86ayy2B', start_date = '2014-03-01', end_date = '2018-09-30')
+```
+
+
+```{r}
+aapl <- cbind(data.frame(date = row.names(as.data.frame(AAPL)),
+                          as.data.frame(AAPL)))
+head(aapl)
+row.names(aapl) <- NULL
+
+goog <- cbind(data.frame(date = row.names(as.data.frame(GOOG)),
+                          as.data.frame(GOOG)))
+head(goog)
+row.names(goog) <- NULL
+
+amzn <- cbind(data.frame(date = row.names(as.data.frame(AMZN)),
+                          as.data.frame(AMZN)))
+head(amzn)
+row.names(amzn) <- NULL
+
+fb <- cbind(data.frame(date = row.names(as.data.frame(FB)),
+                          as.data.frame(FB)))
+head(fb)
+row.names(fb) <- NULL
+
+macys <- cbind(data.frame(date = row.names(as.data.frame(FDO.F)),
+                          as.data.frame(FDO.F)))
+head(macys)
+row.names(macys) <- NULL
+
+ba <- cbind(data.frame(date = row.names(as.data.frame(BA)),
+                          as.data.frame(BA)))
+head(ba)
+row.names(ba) <- NULL
+
+f <- cbind(data.frame(date = row.names(as.data.frame(F)),
+                          as.data.frame(F)))
+head(f)
+row.names(f) <- NULL
+
+nyt <- cbind(data.frame(date = row.names(as.data.frame(NYT)),
+                          as.data.frame(NYT)))
+head(nyt)
+row.names(nyt) <- NULL
+
+nasdaq <- cbind(data.frame(date = row.names(as.data.frame(nasdaqdata)),
+                          as.data.frame(nasdaqdata)))
+head(nasdaq)
+row.names(nasdaq) <- NULL
+
+```
+
+
+```{r}
+# Apple
+ggplot(data = aapl)+
+  geom_line(aes(x=as.Date(date), y= as.numeric(AAPL.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/50)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Apple Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-09-08")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-08-10")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-04-25")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-01-17")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2016-02-19")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2014-09-25")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2014-01-28")), color = 'red')+
+  theme_economist()
+
+# Amazon
+ggplot(data = amzn)+
+  geom_line(aes(x=as.Date(date), y=as.numeric(AMZN.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/5)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Amazon Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-03-29")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-12-29")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-04-05")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-03-31")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-07-23")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-07-22")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-12-07")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-12-23")), color = 'red')+
+  theme_economist()
+  
+# Boeing
+ggplot()+
+  geom_line(data = ba, aes(x=as.Date(date), y=as.numeric(BA.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/10)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Boeing Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-08-03")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-02-17")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2106-12-22")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2016-12-06")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2014-03-20")), color = 'red')+
+  theme_economist()
+
+# Facebook
+ggplot(data = fb)+
+  geom_line(aes(x=as.Date(date), y=as.numeric(FB.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/35)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Facebook Stock')+
+  geom_vline(aes(xintercept =as.Date("2012-05-18")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2012-05-22")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2013-06-30")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2016-10-30")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-09-27")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-10-21")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-02-17")), color = 'red')+
+  theme_economist()
+
+# Ford
+ggplot()+
+  geom_line(data = f, aes(x=as.Date(date), y=as.numeric(F.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/1000)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Ford Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-09-09")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2107-03-28")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-01-24")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-01-09")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-01-04")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-07-14")), color = 'red')+
+  theme_economist()
+
+# Macy's
+ggplot(data = macys)+
+  geom_line(aes(x=as.Date(date), y=as.numeric(FDO.F.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/100)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = "Macy's Stock")+
+  geom_vline(aes(xintercept =as.Date("2016-01-07")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-12-04")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-11-23")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2015-11-16")), color = 'red')+
+  theme_economist()
+
+# Google
+ggplot(data = goog)+
+  geom_line(aes(x=as.Date(date), y=as.numeric(GOOG.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/10)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'Google Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-08-28")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-07-19")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2016-10-30")), color = 'red')+
+  theme_economist()
+
+# New Yort Times
+ggplot(data = nyt)+
+  geom_line(aes(x=as.Date(date), y=as.numeric(NYT.Close)), color = 'blue')+
+  geom_line(data = nasdaq, aes(x=as.Date(Trade.Date), y=as.numeric(Index.Value/500)))+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Closing Value', title = 'New York Times Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-09-06")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-08-16")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2018-07-29")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2017-07-23")), color = 'red')+
+  geom_vline(aes(xintercept =as.Date("2016-04-26")), color = 'red')+
+  theme_economist()
+```
+
+```{r}
+combinedData <- data.frame(aapl, amzn, ba, goog, fb, f, nyt)
+```
+
+
+

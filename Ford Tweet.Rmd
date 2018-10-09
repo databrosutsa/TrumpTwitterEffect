@@ -35,7 +35,7 @@ Ford_1_24_17 <- "Great meeting with Ford CEO Mark Fields and General Motors CEO 
 
 ```{r}
 ### Ford Tweet on January 9, 2017
-Ford_1_9_2017 <- "Ford said last week that it will expand in Michigan and U.S. instead of building a BILLION dollar plant in Mexico. Thank you Ford & Fiat C!"
+Ford_1_9_17 <- "Ford said last week that it will expand in Michigan and U.S. instead of building a BILLION dollar plant in Mexico. Thank you Ford & Fiat C!"
 ```
 
 ```{r}
@@ -46,5 +46,122 @@ Ford_1_4_17 <- "Thank you to Ford for scrapping a new plant in Mexico and creati
 ```{r}
 ### Ford Tweet on July 14, 2015
 Ford_7_14_15 <- "Ford is MOVING jobs from Michigan to Mexico AGAIN! As President, this will stop on Day One! Jobs will stay here."
+```
+
+```{r}
+### Breaks up into sentences
+Ford_9_9_18_sentences <- get_sentences(Ford_9_9_18)
+Ford_3_28_17_sentences <- get_sentences(Ford_3_28_17)
+Ford_1_24_17_sentences <- get_sentences(Ford_1_24_17)
+Ford_1_9_17_sentences <- get_sentences(Ford_1_9_17)
+Ford_1_4_17_sentences <- get_sentences(Ford_1_4_17)
+Ford_7_14_15_sentences <- get_sentences(Ford_7_14_15)
+```
+
+```{r}
+###If want tweet as tokens (words)
+Ford_9_9_18_words <- get_tokens(Ford_9_9_18, pattern = "\\W")
+Ford_3_28_17_words <- get_tokens(Ford_3_28_17, pattern = "\\W")
+Ford_1_24_17_words <- get_tokens(Ford_1_24_17, pattern = "\\W")
+Ford_1_9_17_words <- get_tokens(Ford_1_9_17, pattern = "\\W")
+Ford_1_4_17_words <- get_tokens(Ford_1_4_17, pattern = "\\W")
+Ford_7_14_15_words <- get_tokens(Ford_7_14_15, pattern = "\\W")
+```
+
+
+```{r}
+### Sentiment of Ford tweet as sentences
+Ford_9_9_18_ments <- get_sentiment(Ford_9_9_18_sentences, method="afinn")
+Ford_3_28_17_ments <- get_sentiment(Ford_3_28_17_sentences, method="afinn")
+Ford_1_24_17_ments <- get_sentiment(Ford_1_24_17_sentences, method="afinn")
+Ford_1_9_17_ments <- get_sentiment(Ford_1_9_17_sentences, method="afinn")
+Ford_1_4_17_ments <- get_sentiment(Ford_1_4_17_sentences, method="afinn")
+Ford_7_14_15_ments <- get_sentiment(Ford_7_14_15_sentences, method="afinn")
+```
+
+```{r}
+### Sentiment of Ford tweet as words
+Ford_9_9_18_mentw <- get_sentiment(Ford_9_9_18_words, method="afinn")
+Ford_3_28_17_mentw <- get_sentiment(Ford_3_28_17_words, method="afinn")
+Ford_1_24_17_mentw <- get_sentiment(Ford_1_24_17_words, method="afinn")
+Ford_1_9_17_mentw <- get_sentiment(Ford_1_9_17_words, method="afinn")
+Ford_1_4_17_mentw <- get_sentiment(Ford_1_4_17_words, method="afinn")
+Ford_7_14_15_mentw <- get_sentiment(Ford_7_14_15_words, method="afinn")
+```
+
+```{r}
+### Sentiment analysis of Ford tweet as sentences
+Ford_9_9_18_ments
+Ford_3_28_17_ments
+Ford_1_24_17_ments
+Ford_1_9_17_ments
+Ford_1_4_17_ments
+Ford_7_14_15_ments
+```
+
+```{r}
+### Sentiment analysis of Ford tweet as words
+Ford_9_9_18_mentw
+Ford_3_28_17_mentw
+Ford_1_24_17_mentw
+Ford_1_9_17_mentw
+Ford_1_4_17_mentw
+Ford_7_14_15_mentw
+```
+
+```{r}
+### Summation of Sentiment analysis of Ford tweet as sentences
+sum(Ford_9_9_18_ments) 
+sum(Ford_3_28_17_ments)
+sum(Ford_1_24_17_ments)
+sum(Ford_1_9_17_ments)
+sum(Ford_1_4_17_ments)
+sum(Ford_7_14_15_ments)
+
+#Mean
+mean(Ford_9_9_18_ments) 
+mean(Ford_3_28_17_ments)
+mean(Ford_1_24_17_ments)
+mean(Ford_1_9_17_ments)
+mean(Ford_1_4_17_ments)
+mean(Ford_7_14_15_ments)
+```
+
+```{r}
+### Summation of Sentiment analysis of Ford tweet as words
+sum(Ford_9_9_18_mentw) 
+sum(Ford_3_28_17_mentw)
+sum(Ford_1_24_17_mentw)
+sum(Ford_1_9_17_mentw)
+sum(Ford_1_4_17_mentw)
+sum(Ford_7_14_15_mentw)
+
+#Mean
+mean(Ford_9_9_18_mentw) 
+mean(Ford_3_28_17_mentw)
+mean(Ford_1_24_17_mentw)
+mean(Ford_1_9_17_mentw)
+mean(Ford_1_4_17_mentw)
+mean(Ford_7_14_15_mentw)
+```
+
+```{r}
+### Summary of sentiment analysis of Ford tweet as sentences
+summary(Ford_9_9_18_ments)
+summary(Ford_3_28_17_ments)
+summary(Ford_1_24_17_ments)
+summary(Ford_1_9_17_ments)
+summary(Ford_1_4_17_ments)
+summary(Ford_7_14_15_ments)
+```
+
+```{r}
+### Summary of sentiment analysis of Ford tweet as words
+summary(Ford_9_9_18_mentw)
+summary(Ford_3_28_17_mentw)
+summary(Ford_1_24_17_mentw)
+summary(Ford_1_9_17_mentw)
+summary(Ford_1_4_17_mentw)
+summary(Ford_7_14_15_mentw)
 ```
 

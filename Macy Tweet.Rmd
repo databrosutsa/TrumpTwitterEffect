@@ -115,7 +115,7 @@ mean(Macy_11_16_15_mentw)
 ```
 
 ```{r}
-### Summary of sentiment analysis of Google tweet as sentences
+### Summary of sentiment analysis of Macy tweet as sentences
 summary(Macy_1_7_16_ments)
 summary(Macy_12_4_15_ments)
 summary(Macy_11_23_15_ments)
@@ -123,7 +123,7 @@ summary(Macy_11_16_15_ments)
 ```
 
 ```{r}
-### Summary of sentiment analysis of Google tweet as words
+### Summary of sentiment analysis of Macy tweet as words
 summary(Macy_1_7_16_mentw)
 summary(Macy_12_4_15_mentw)
 summary(Macy_11_23_15_mentw)

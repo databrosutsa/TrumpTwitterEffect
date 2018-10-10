@@ -1,0 +1,210 @@
+---
+title: "Apple"
+author: "Ray Flores"
+date: "October 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(syuzhet)
+library(wordcloud)
+library(ggplot2)
+library(MASS)
+library(pastecs)
+library(shiny)
+library(shinydashboard)
+library(ggthemes)
+library(tidytext)
+library(tidyverse)
+library(tm)
+library(lubridate)
+library(stringr)
+library(reader)
+library(csvread)
+library(twitteR)
+library(devtools)
+#if(!require(Rstem)) install_url("http://cran.r-project.org/src/contrib/Archive/Rstem/Rstem_0.4-1.tar.gz")
+#if(!require(sentiment)) install_url("http://cran.r-project.org/src/contrib/Archive/sentiment/sentiment_0.2.tar.gz")
+#library(Rstem)
+#library(sentiment)
+library(plotly)
+library(dplyr)
+library(Quandl)
+library(magrittr)
+library(tseries)
+
+
+
+### All Trump Tweets
+allTrumpTweets <- read.csv(file="AllTrumpTweets.csv",head=TRUE,sep=",")
+
+
+### Essential Companies
+amazon <- read.csv(file="Amazon.csv",head=TRUE,sep=",")
+apple <- read.csv(file="Apple.csv",head=TRUE,sep=",")
+boeing <- read.csv(file="Boeing.csv",head=TRUE,sep=",")
+facebook <- read.csv(file="Facebook.csv",head=TRUE,sep=",")
+ford <- read.csv(file="Ford.csv",head=TRUE,sep=",")
+google <- read.csv(file="Google.csv",head=TRUE,sep=",")
+macys <- read.csv(file="Macy's.csv",head=TRUE,sep=",")
+newYorkTimes <- read.csv(file="NewYorkTimes.csv", head=TRUE,sep=",")
+
+# amazon_text <- subset(apple, select=c("text"))
+# class(apple)
+
+apple_text <- as.character(apple[["text"]])
+
+
+
+
+
+
+
+# Function for cleaning tweets
+cleanTweets <- function (tweets) {
+  
+  
+  #sapply(tweets, function(x) x$$getText())
+  
+  
+  clean_tweets = as.character(tweets[[2]])
+  # remove retweet entities
+  clean_tweets = gsub('(RT|via)((?:\\b\\W*@\\w+)+)', '', clean_tweets)
+  # remove @people
+  clean_tweets = gsub('@\\w+', '', clean_tweets)
+  # remove punctuation
+  clean_tweets = gsub('[[:punct:]]', '', clean_tweets)
+  # remove numbers
+  clean_tweets = gsub('[[:digit:]]', '', clean_tweets)
+  # remove html links
+  clean_tweets = gsub('http\\w+', '', clean_tweets)
+  # remove unnecessary spaces
+  #clean_tweets = gsub('[ \t]{2,}', '', clean_tweets)
+  #clean_tweets = gsub('^\\s+|\\s+$', '', clean_tweets)
+  # remove emojis or special characters
+  clean_tweets = gsub('<.*>', '', enc2native(clean_tweets))
+  
+  clean_tweets = tolower(clean_tweets)
+  
+  clean_tweets
+}
+
+get_time_stamp <- function (tweets) {
+  
+  tweets_time = as.character(tweets[[3]])
+  clean_time = as.POSIXct(tweets_time, tz = "GMT", origin="1970-01-01", format = "%D %k ")
+  clean_time
+  
+}
+
+### Vector of company names, if needed available
+companies <- factor(c("Amazon", "Apple", "Google", "Facebook", "Boeing", "Ford"))
+
+### Use the function defined above to clean the tweets by the president 
+### and separate according to columns 
+
+### Company tweets
+#amazonTweets <- cleanTweets(amazon["text"])
+
+appleTweets <- cleanTweets(apple)
+
+# Amazon
+# amazonTimeStamp <- as.POSIXct(sapply(amazon["created_at"], 
+#                                      function(x)x$getCreated()), 
+#                                         origin="1970-01-01", tz="GMT")
+
+appleTimeStamp <- get_time_stamp(apple)
+appleTimeStamp <- appleTimeStamp[!duplicated(apple["text"])]
+appleTweets <- appleTweets[!duplicated(apple["text"])]
+
+
+
+
+# apple
+appleSyuzhet <- get_sentiment(appleTweets, method="syuzhet")
+appleBing <- get_sentiment(appleTweets, method="bing")
+appleAfinn <- get_sentiment(appleTweets, method="afinn")
+appleNrc <- get_sentiment(appleTweets, method="nrc")
+appleSentiments <- data.frame(appleSyuzhet, appleBing, appleAfinn, appleNrc, appleTimeStamp)
+
+
+
+
+
+
+# apple
+appleEmotions <- get_nrc_sentiment(appleTweets)
+appleEmoBar = colSums(appleEmotions)
+appleEmoSum = data.frame(count=appleEmoBar, emotion=names(appleEmoBar))
+appleEmoSum$emotion = factor(appleEmoSum$emotion, levels=appleEmoSum$emotion[order(appleEmoSum$count, decreasing = TRUE)])
+
+
+
+
+# apple
+plot_ly(appleSentiments, x=~appleTimeStamp, y=~appleSyuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~appleBing, mode="lines", name="bing") %>%
+  add_trace(y=~appleAfinn, mode="lines", name="afinn") %>%
+  add_trace(y=~appleNrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company apple",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+
+
+# apple
+plot_ly(appleEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for apple Related Trump Tweets")
+
+
+# apple
+appleAll = c(
+  paste(appleTweets[appleEmotions$anger > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$anticipation > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$disgust > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$fear > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$joy > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$sadness > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$surprise > 0], collapse=" "),
+  paste(appleTweets[appleEmotions$trust > 0], collapse=" ")
+)
+appleAll <- removeWords(appleAll, stopwords("english"))
+
+
+
+# apple
+appleCorpus = Corpus(VectorSource(appleAll))
+
+
+# apple
+appleTdm = TermDocumentMatrix(appleCorpus)
+
+
+
+# apple
+appleTdm = as.matrix(appleTdm)
+appleTdm1 <- appleTdm[nchar(rownames(appleTdm)) < 11,]
+
+
+# apple
+colnames(appleTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(appleTdm1) <- colnames(appleTdm)
+
+
+
+# apple
+comparison.cloud(appleTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=1000, scale=c(3.5, 0.1),rot.per=0.4)
+
+
+```
+
+
+
+
+
+
+

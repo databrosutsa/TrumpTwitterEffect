@@ -1,0 +1,193 @@
+---
+title: "Macys"
+author: "Ray Flores"
+date: "October 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(syuzhet)
+library(wordcloud)
+library(ggplot2)
+library(MASS)
+library(pastecs)
+library(shiny)
+library(shinydashboard)
+library(ggthemes)
+library(tidytext)
+library(tidyverse)
+library(tm)
+library(lubridate)
+library(stringr)
+library(reader)
+library(csvread)
+library(twitteR)
+library(devtools)
+#if(!require(Rstem)) install_url("http://cran.r-project.org/src/contrib/Archive/Rstem/Rstem_0.4-1.tar.gz")
+#if(!require(sentiment)) install_url("http://cran.r-project.org/src/contrib/Archive/sentiment/sentiment_0.2.tar.gz")
+#library(Rstem)
+#library(sentiment)
+library(plotly)
+library(dplyr)
+library(Quandl)
+library(magrittr)
+library(tseries)
+
+
+### Essential Companies
+amazon <- read.csv(file="Amazon.csv",head=TRUE,sep=",")
+apple <- read.csv(file="Apple.csv",head=TRUE,sep=",")
+boeing <- read.csv(file="Boeing.csv",head=TRUE,sep=",")
+facebook <- read.csv(file="Facebook.csv",head=TRUE,sep=",")
+ford <- read.csv(file="Ford.csv",head=TRUE,sep=",")
+google <- read.csv(file="Google.csv",head=TRUE,sep=",")
+macys <- read.csv(file="Macy's.csv",head=TRUE,sep=",")
+newYorkTimes <- read.csv(file="NewYorkTimes.csv", head=TRUE,sep=",")
+
+# macys_text <- subset(macys, select=c("text"))
+# class(macys)
+
+macys_text <- as.character(macys[["text"]])
+
+
+# Function for cleaning tweets
+cleanTweets <- function (tweets) {
+  
+  
+  #sapply(tweets, function(x) x$$getText())
+  
+  
+  clean_tweets = as.character(tweets[[2]])
+  # remove retweet entities
+  clean_tweets = gsub('(RT|via)((?:\\b\\W*@\\w+)+)', '', clean_tweets)
+  # remove @people
+  clean_tweets = gsub('@\\w+', '', clean_tweets)
+  # remove punctuation
+  clean_tweets = gsub('[[:punct:]]', '', clean_tweets)
+  # remove numbers
+  clean_tweets = gsub('[[:digit:]]', '', clean_tweets)
+  # remove html links
+  clean_tweets = gsub('http\\w+', '', clean_tweets)
+  # remove unnecessary spaces
+  #clean_tweets = gsub('[ \t]{2,}', '', clean_tweets)
+  #clean_tweets = gsub('^\\s+|\\s+$', '', clean_tweets)
+  # remove emojis or special characters
+  clean_tweets = gsub('<.*>', '', enc2native(clean_tweets))
+  
+  clean_tweets = tolower(clean_tweets)
+  
+  clean_tweets
+}
+
+get_time_stamp <- function (tweets) {
+  
+  tweets_time = as.character(tweets[[3]])
+  clean_time = as.POSIXct(tweets_time, tz = "GMT", origin="1970-01-01", format = "%D %k ")
+  clean_time
+  
+}
+
+### Vector of company names, if needed available
+companies <- factor(c("Amazon", "macys", "Google", "macys", "macys", "Ford"))
+
+### Use the function defined above to clean the tweets by the president 
+### and separate according to columns 
+
+### Company tweets
+#amazonTweets <- cleanTweets(amazon["text"])
+
+macysTweets <- cleanTweets(macys)
+
+# Amazon
+# amazonTimeStamp <- as.POSIXct(sapply(amazon["created_at"], 
+#                                      function(x)x$getCreated()), 
+#                                         origin="1970-01-01", tz="GMT")
+
+macysTimeStamp <- get_time_stamp(macys)
+macysTimeStamp <- macysTimeStamp[!duplicated(macys["text"])]
+macysTweets <- macysTweets[!duplicated(macys["text"])]
+
+
+
+
+# macys
+macysSyuzhet <- get_sentiment(macysTweets, method="syuzhet")
+macysBing <- get_sentiment(macysTweets, method="bing")
+macysAfinn <- get_sentiment(macysTweets, method="afinn")
+macysNrc <- get_sentiment(macysTweets, method="nrc")
+macysSentiments <- data.frame(macysSyuzhet, macysBing, macysAfinn, macysNrc, macysTimeStamp)
+
+
+
+
+
+
+# macys
+macysEmotions <- get_nrc_sentiment(macysTweets)
+macysEmoBar = colSums(macysEmotions)
+macysEmoSum = data.frame(count=macysEmoBar, emotion=names(macysEmoBar))
+macysEmoSum$emotion = factor(macysEmoSum$emotion, levels=macysEmoSum$emotion[order(macysEmoSum$count, decreasing = TRUE)])
+
+
+
+
+# macys
+plot_ly(macysSentiments, x=~macysTimeStamp, y=~macysSyuzhet, type="scatter", mode="jitter", name="syuzhet") %>%
+  add_trace(y=~macysBing, mode="lines", name="bing") %>%
+  add_trace(y=~macysAfinn, mode="lines", name="afinn") %>%
+  add_trace(y=~macysNrc, mode="lines", name="nrc") %>%
+  layout(title="Trump Twitter Sentiment for Company macys",
+         yaxis=list(title="score"), xaxis=list(title="date"))
+
+
+
+# macys
+plot_ly(macysEmoSum, x=~emotion, y=~count, type="bar", color=~emotion) %>%
+  layout(xaxis=list(title=""), showlegend=FALSE,
+         title="Distribution of emotion for macys Related Trump Tweets")
+
+
+# macys
+macysAll = c(
+  paste(macysTweets[macysEmotions$anger > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$anticipation > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$disgust > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$fear > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$joy > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$sadness > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$surprise > 0], collapse=" "),
+  paste(macysTweets[macysEmotions$trust > 0], collapse=" ")
+)
+macysAll <- removeWords(macysAll, stopwords("english"))
+
+
+
+# macys
+macysCorpus = Corpus(VectorSource(macysAll))
+
+
+# macys
+macysTdm = TermDocumentMatrix(macysCorpus)
+
+
+
+# macys
+macysTdm = as.matrix(macysTdm)
+macysTdm1 <- macysTdm[nchar(rownames(macysTdm)) < 11,]
+
+
+# macys
+colnames(macysTdm) = c('anger', 'anticipation', 'disgust', 'fear', 'joy', 'sadness', 'surprise', 'trust')
+colnames(macysTdm1) <- colnames(macysTdm)
+
+
+
+# macys
+comparison.cloud(macysTdm1, random.order=FALSE,
+                 colors = c("#00B2FF", "red", "#FF0099", "#6600CC", "green", "orange", "blue", "brown"),
+                 title.size=1, max.words=1000, scale=c(3.5, 0.1),rot.per=0.4)
+
+
+```

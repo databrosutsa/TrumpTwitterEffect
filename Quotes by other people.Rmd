@@ -1,0 +1,88 @@
+---
+title: "Quotes by other people"
+author: "Manuel Perez"
+date: "October 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(syuzhet)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(readr)
+```
+
+```{r}
+Hitlerquote1 <- "He alone, who owns the youth, gains the future."
+Hitlerquote2 <- "Do not compare yourself to others. If you do so, you are insulting yourself"
+Hitlerquote3 <- "Life is like a mirror, if you frown at it, it frowns back; if you smile, 
+it returns the greeting."
+Stalinquote1 <- "I believe in one thing only, the power of the human will."
+Stalinquote2 <- "Leaders come and go, but the people remain. Only the people are immortal."
+```
+
+```{r}
+Hitlerquote1__ments <- get_sentiment(Hitlerquote1, method="afinn")
+Hitlerquote2__ments <- get_sentiment(Hitlerquote2, method="afinn")
+Hitlerquote3__ments <- get_sentiment(Hitlerquote3, method="afinn")
+Stalinquote1__ments <- get_sentiment(Stalinquote1, method="afinn")
+Stalinquote2__ments <- get_sentiment(Stalinquote2, method="afinn")
+```
+
+
+```{r}
+Stalinquote2_words <- get_tokens(Stalinquote2, pattern = "\\W")
+```
+
+
+```{r}
+Stalinquote2_mentw <- get_sentiment(Stalinquote2_words, method="afinn")
+```
+
+```{r}
+Stalinquote2_mentw
+```
+
+```{r}
+mean(Stalinquote2_mentw)
+#summary(Stalinquote2_mentw)
+```
+
+
+```{r}
+### Summation of Sentiment analysis of Google tweet as words
+sum(Hitlerquote1__ments)
+sum(Hitlerquote2__ments)
+sum(Hitlerquote3__ments)
+sum(Stalinquote1__ments)
+sum(Stalinquote2__ments)
+
+#Mean
+mean(Hitlerquote1__ments)
+mean(Hitlerquote2__ments)
+mean(Hitlerquote3__ments)
+mean(Stalinquote1__ments)
+mean(Stalinquote2__ments)
+```
+
+```{r}
+summary(Stalinquote2__ments)
+```
+
+```{r}
+nrc_Stalinquote2 <- get_nrc_sentiment(Stalinquote2)
+```
+
+```{r}
+nrc_Stalinquote2
+
+```
+
+
+

@@ -1,0 +1,247 @@
+---
+title: "Skeleton Code for Zoomed in Graphs"
+author: "Manuel Perez"
+date: "October 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(lubridate)
+library(quantmod)
+library(Quandl)
+library(ggthemes)
+library(dplyr)
+```
+
+```{r}
+getSymbols("GOOG", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+getSymbols("AMZN", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+getSymbols("FB", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+getSymbols("AAPL", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+getSymbols("FDO.F", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+getSymbols("BA", src = 'yahoo', from = '2014-03-01', to = '2018-09-30')
+getSymbols("F", src = 'yahoo', from = '2015-01-30', to = '2018-09-30')
+getSymbols("NYT", src = 'yahoo', from = '2015-07-30', to = '2018-09-30')
+```
+
+```{r}
+nasdaqdata <- Quandl("NASDAQOMX/COMP", api_key = 'ZD8hU_zfyaksm86ayy2B', start_date = '2014-03-01', end_date = '2018-09-30')
+```
+
+```{r}
+aapl <- cbind(data.frame(date = row.names(as.data.frame(AAPL)),
+                          as.data.frame(AAPL)))
+head(aapl)
+row.names(aapl) <- NULL
+
+goog <- cbind(data.frame(date = row.names(as.data.frame(GOOG)),
+                          as.data.frame(GOOG)))
+head(goog)
+row.names(goog) <- NULL
+
+amzn <- cbind(data.frame(date = row.names(as.data.frame(AMZN)),
+                          as.data.frame(AMZN)))
+head(amzn)
+row.names(amzn) <- NULL
+
+fb <- cbind(data.frame(date = row.names(as.data.frame(FB)),
+                          as.data.frame(FB)))
+head(fb)
+row.names(fb) <- NULL
+
+macys <- cbind(data.frame(date = row.names(as.data.frame(FDO.F)),
+                          as.data.frame(FDO.F)))
+head(macys)
+row.names(macys) <- NULL
+
+ba <- cbind(data.frame(date = row.names(as.data.frame(BA)),
+                          as.data.frame(BA)))
+head(ba)
+row.names(ba) <- NULL
+
+f <- cbind(data.frame(date = row.names(as.data.frame(F)),
+                          as.data.frame(F)))
+head(f)
+row.names(f) <- NULL
+
+nyt <- cbind(data.frame(date = row.names(as.data.frame(NYT)),
+                          as.data.frame(NYT)))
+head(nyt)
+row.names(nyt) <- NULL
+
+nasdaq <- cbind(data.frame(date = row.names(as.data.frame(nasdaqdata)),
+                          as.data.frame(nasdaqdata)))
+head(nasdaq)
+row.names(nasdaq) <- NULL
+
+```
+
+```{r}
+### Boeing Event on 8-3-2018 dataframes
+Boeing_8_3_18_eventy <- ba[1111:1121, ]
+Boeing_8_3_18_eventn <- nasdaqdata[45:35, ]
+```
+
+```{r}
+#Graph of Boeing 8-3-2018 vs Full S&P
+ggplot()+
+  geom_line(data = Boeing_8_3_18_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((BA.Close - Lag(BA.Close))/Lag(BA.Close))), color = 'blue')+
+  geom_line(data = Boeing_8_3_18_eventn, 
+            aes(x= Boeing_8_3_18_eventn$`Trade Date`, 
+                y=as.numeric((Boeing_8_3_18_eventn$`Index Value`- Lag(Boeing_8_3_18_eventn$`Index Value`))/Lag(Boeing_8_3_18_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Boeing Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-08-03")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+#Boeing Event on 12-26-2016
+Boeing_12_22_16_eventy <- ba[706:715, ]
+Boeing_12_22_16_eventn <- nasdaqdata[450:441, ]
+```
+
+```{r}
+#Graph of Boeing 12-22-2016 vs Full S&P
+ggplot()+
+  geom_line(data = Boeing_12_22_16_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((BA.Close - Lag(BA.Close))/Lag(BA.Close))), color = 'blue')+
+  geom_line(data = Boeing_12_22_16_eventn, 
+            aes(x= Boeing_12_22_16_eventn$`Trade Date`, 
+                y=as.numeric((Boeing_12_22_16_eventn$`Index Value`- Lag(Boeing_12_22_16_eventn$`Index Value`))/Lag(Boeing_12_22_16_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Boeing Stock')+
+  geom_vline(aes(xintercept =as.Date("2016-12-22")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Ford_1_24_17_eventy <- f[495:505, ]
+Ford_1_24_17_eventn <- nasdaqdata[430:420, ]
+```
+
+```{r}
+#Graph of Ford 01-24-2017 vs Full S&P
+ggplot()+
+  geom_line(data = Ford_1_24_17_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((F.Close - Lag(F.Close))/Lag(F.Close))), color = 'blue')+
+  geom_line(data = Ford_1_24_17_eventn, 
+            aes(x= Ford_1_24_17_eventn$`Trade Date`, 
+                y=as.numeric((Ford_1_24_17_eventn$`Index Value`- Lag(Ford_1_24_17_eventn$`Index Value`))/Lag(Ford_1_24_17_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Ford Stock')+
+  geom_vline(aes(xintercept =as.Date("2017-01-24")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Ford_3_28_17_eventy <- f[539:549, ]
+Ford_3_28_17_eventn <- nasdaqdata[386:376, ]
+```
+
+```{r}
+#Graph of Ford 03-28-2017 vs Full S&P
+ggplot()+
+  geom_line(data = Ford_3_28_17_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((F.Close - Lag(F.Close))/Lag(F.Close))), color = 'blue')+
+  geom_line(data = Ford_3_28_17_eventn, 
+            aes(x= Ford_3_28_17_eventn$`Trade Date`, 
+                y=as.numeric((Ford_3_28_17_eventn$`Index Value`- Lag(Ford_3_28_17_eventn$`Index Value`))/Lag(Ford_3_28_17_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Ford Stock')+
+  geom_vline(aes(xintercept =as.Date("2017-03-28")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Google_8_28_18_eventy <- goog[772:781, ]
+Google_8_28_18_eventn <- nasdaqdata[28:19, ]
+```
+
+```{r}
+#Graph of Google 08-28-2018 vs Full S&P
+ggplot()+
+  geom_line(data = Google_8_28_18_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((GOOG.Close - Lag(GOOG.Close))/Lag(GOOG.Close))), color = 'blue')+
+  geom_line(data = Google_8_28_18_eventn, 
+            aes(x= Google_8_28_18_eventn$`Trade Date`, 
+                y=as.numeric((Google_8_28_18_eventn$`Index Value`- Lag(Google_8_28_18_eventn$`Index Value`))/Lag(Google_8_28_18_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Google Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-08-28")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Google_7_19_18_eventy <- goog[744:754, ]
+Google_7_19_18_eventn <- nasdaqdata[56:46, ]
+```
+
+```{r}
+#Graph of Google 07-19-2018 vs Full S&P
+ggplot()+
+  geom_line(data = Google_7_19_18_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((GOOG.Close - Lag(GOOG.Close))/Lag(GOOG.Close))), color = 'blue')+
+  geom_line(data = Google_7_19_18_eventn, 
+            aes(x= Google_7_19_18_eventn$`Trade Date`, 
+                y=as.numeric((Google_7_19_18_eventn$`Index Value`- Lag(Google_7_19_18_eventn$`Index Value`))/Lag(Google_7_19_18_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = 'Google Stock')+
+  geom_vline(aes(xintercept =as.Date("2018-07-19")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Macy_01_07_2016_eventy <- macys[108:117, ]
+Macy_01_07_2016_eventn <- nasdaqdata[693:683, ]
+```
+
+```{r}
+#Graph of Macy 01-07-2016 vs Full S&P
+ggplot()+
+  geom_line(data = Macy_01_07_2016_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((FDO.F.Close - Lag(FDO.F.Close))/Lag(FDO.F.Close))), color = 'blue')+
+  geom_line(data = Macy_01_07_2016_eventn, 
+            aes(x= Macy_01_07_2016_eventn$`Trade Date`, 
+                y=as.numeric((Macy_01_07_2016_eventn$`Index Value`- Lag(Macy_01_07_2016_eventn$`Index Value`))/Lag(Macy_01_07_2016_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = "Macy's Stock")+
+  geom_vline(aes(xintercept =as.Date("2016-01-07")), color = 'red') +
+  theme_economist()
+```
+
+```{r}
+Macy_12_04_2015_eventy <- macys[87:97, ]
+Macy_12_04_2015_eventn <- nasdaqdata[715:705, ]
+```
+
+```{r}
+#Graph of Macy 12-04-2015 vs Full S&P
+ggplot()+
+  geom_line(data = Macy_12_04_2015_eventy, 
+            aes(x=as.Date(date),
+                y=as.numeric((FDO.F.Close - Lag(FDO.F.Close))/Lag(FDO.F.Close))), color = 'blue')+
+  geom_line(data = Macy_12_04_2015_eventn, 
+            aes(x= Macy_12_04_2015_eventn$`Trade Date`, 
+                y=as.numeric((Macy_12_04_2015_eventn$`Index Value`- Lag(Macy_12_04_2015_eventn$`Index Value`))/Lag(Macy_12_04_2015_eventn$`Index Value`)))) +
+  scale_x_date(date_breaks = "2 day", date_labels = "%m-%d-%Y")+
+  labs(x = 'Date', y = 'Return', title = "Macy's Stock")+
+  geom_vline(aes(xintercept =as.Date("2015-12-04")), color = 'red ') +
+  theme_economist()
+```
+

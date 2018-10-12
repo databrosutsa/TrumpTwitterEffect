@@ -1,0 +1,153 @@
+---
+title: "Tweet_Distributions_Charts"
+author: "Manuel Perez"
+date: "October 8, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(syuzhet)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(readr)
+```
+
+```{r}
+Boeing <- read.csv("F:/Visualization/New group project/Boeing.csv")
+#View(Boeing)
+Ford <- read.csv("F:/Visualization/New group project/Ford.csv")
+#View(Ford)
+Google <- read.csv("F:/Visualization/New group project/Google.csv")
+#View(Google)
+Macy <- read.csv("F:/Visualization/New group project/Macy.csv")
+#View(Macy)
+```
+
+```{r}
+Boeing <- as.data.frame(Boeing)
+```
+
+```{r}
+is.data.frame(Boeing)
+is.data.frame(Ford)
+```
+
+
+
+```{r}
+nrc_Boeing <- get_nrc_sentiment(as.character(Boeing$text))
+nrc_Ford <- get_nrc_sentiment(as.character(Ford$text))
+nrc_Google <- get_nrc_sentiment(as.character(Google$text))
+nrc_Macy <- get_nrc_sentiment(as.character(Macy$text))
+```
+
+```{r}
+nrc_Boeing
+nrc_Ford
+nrc_Google
+nrc_Macy
+```
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Boeing[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  col = c("yellow", "black", "green", "pink", "blue", "red", "purple", "brown"),
+  main = "Emotions in Boeing Tweets", xlab="Percentage"
+  )
+```
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Ford[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  col = Boeing$text,
+  main = "Emotions in Ford Tweets", xlab="Percentage"
+  )
+```
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Google[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Emotions in Google Tweets", xlab="Percentage"
+  )
+```
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Macy[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Emotions in Macy Tweets", xlab="Percentage"
+  )
+```
+
+```{r}
+x <- c(1:20)
+Macybad <- row(Macy,x)
+```
+
+```{r}
+Macybad
+```
+
+```{r}
+Macybad <- head(Macy,20)
+```
+
+```{r}
+View(Macybad)
+```
+
+```{r}
+Macygood <- tail(Macy,19)
+```
+
+```{r}
+View(Macygood)
+```
+
+```{r}
+nrc_Macybad <- get_nrc_sentiment(as.character(Macybad$text))
+nrc_Macygood <- get_nrc_sentiment(as.character(Macygood$text))
+```
+
+
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Macybad[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Emotions in Bad Macy Tweets", xlab="Percentage"
+  )
+```
+
+```{r}
+barplot(
+  sort(colSums(prop.table(nrc_Macygood[, 1:8]))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Emotions in Good Macy Tweets", xlab="Percentage"
+  )
+```
+```{r}
+
+```
+
